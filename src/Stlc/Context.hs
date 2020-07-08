@@ -15,15 +15,16 @@ import Stlc.Type
   (Type (..)
   )
 
+import Stlc.Variable
+  (Variable (..)
+  )
+
 import Data.Map
   (Map
   ,empty
   ,insert
   ,lookup
   )
-
-type Variable =
-  String
 
 newtype Context =
   Context (Map Variable Type)
@@ -36,10 +37,10 @@ cnInsert :: Variable -> Type -> Context -> Either String Context
 cnInsert key value (Context context) =
   case lookup key context of
     Nothing -> Right (Context (insert key value context))
-    Just _ -> Left ("Context: variable '" ++ key ++ "' already exists")
+    Just _ -> Left ("Context: variable '" ++ show key ++ "' already exists")
 
 cnLookup :: Variable -> Context -> Either String Type
 cnLookup key (Context context) =
   case lookup key context of
-    Nothing -> Left ("Context: variable '" ++ key ++ "' does not exist")
+    Nothing -> Left ("Context: variable '" ++ show key ++ "' does not exist")
     Just value -> Right value
