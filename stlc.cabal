@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 39af6706d462b4be53df7e064c019790f87c6fd1dec084bec4a8adcacb93869b
+-- hash: cf481546233ddab8f9b2bd3930584ec3a8ccb8177b4a3352afb6e474b87dc230
 
 name:           stlc
 version:        0.1.0.0
@@ -27,9 +27,10 @@ source-repository head
 
 library
   exposed-modules:
-      LChurch.Context
-      LChurch.Inference
-      LChurch.Syntax
+      Stlc.ChurchExpression
+      Stlc.Context
+      Stlc.CurryExpression
+      Stlc.Type
   other-modules:
       Paths_stlc
   hs-source-dirs:

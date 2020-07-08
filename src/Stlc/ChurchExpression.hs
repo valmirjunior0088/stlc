@@ -1,22 +1,35 @@
-module LChurch.Inference
-  (exInferType
+module Stlc.ChurchExpression
+  (Expression (..)
+  ,exInferType
   )
   where
 
-import LChurch.Context
-  (Context (..)
-  ,cnInsert
-  ,cnLookup
+import Stlc.Type
+  (Type (..)
   )
 
-import LChurch.Syntax
-  (Type (..)
-  ,Expression (..)
+import Stlc.Context
+  (Variable
+  ,Context (..)
+  ,cnInsert
+  ,cnLookup
   )
 
 import Control.Monad
   (unless
   )
+
+data Expression =
+  ExTrue |
+  ExFalse |
+  ExCaseBoolean Expression Expression Expression |
+  ExZero |
+  ExSuccessor Expression |
+  ExCaseNatural Expression Expression Expression |
+  ExVariable Variable |
+  ExAbstraction Variable Type Expression |
+  ExApplication Expression Expression
+  deriving (Show)
 
 exInferType :: Context -> Expression -> Either String Type
 exInferType context expression =

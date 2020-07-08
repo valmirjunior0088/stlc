@@ -1,8 +1,9 @@
-module LChurch.Context
-  (Context (..)
+module Stlc.Context
+  (Variable
+  ,Context (..)
+  ,cnEmpty
   ,cnInsert
   ,cnLookup
-  ,cnEmpty
   )
   where
 
@@ -10,9 +11,8 @@ import Prelude hiding
   (lookup
   )
 
-import LChurch.Syntax
-  (Variable
-  ,Type (..)
+import Stlc.Type
+  (Type (..)
   )
 
 import Data.Map
@@ -21,6 +21,9 @@ import Data.Map
   ,insert
   ,lookup
   )
+
+type Variable =
+  String
 
 newtype Context =
   Context (Map Variable Type)

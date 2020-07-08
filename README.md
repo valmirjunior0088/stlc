@@ -1,3 +1,3 @@
 # STLC
 
-Simply typed lambda calculus
+Simply typed lambda calculus experiments
