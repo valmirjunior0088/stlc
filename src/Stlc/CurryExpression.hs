@@ -102,8 +102,8 @@ exCollectEquations context expression =
         let collectedEquations = inputEquations ++ zeroEquations ++ successorEquations
 
         let inputTypeEquation = (inputType, TpNatural)
-        let successorTypeEquation = (TpAbstraction TpNatural zeroType, successorType)
-        let localEquations = [inputTypeEquation, successorTypeEquation]
+        let outputTypeEquation = (TpAbstraction TpNatural zeroType, successorType)
+        let localEquations = [inputTypeEquation, outputTypeEquation]
 
         Right (zeroType, collectedEquations ++ localEquations)
     
@@ -194,7 +194,7 @@ teSolve substitutions variable source equations =
           (substitutions ++ [substitution])
           (map (teApplySubstitution substitution) equations)
     else
-      Left ("teSolve: variable " ++ show variable ++ "is not fresh in " ++ show source)
+      Left ("teSolve: variable " ++ show variable ++ " is not fresh in " ++ show source)
 
 tpApplySubstitutions :: [Substitution] -> Type -> Type
 tpApplySubstitutions substitutions subject =
