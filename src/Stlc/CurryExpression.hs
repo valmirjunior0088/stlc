@@ -17,10 +17,6 @@ import Stlc.Context
   ,cnAll
   )
 
-import Control.Monad
-  (unless
-  )
-
 data Type =
   TpVariable Variable |
   TpBoolean |
