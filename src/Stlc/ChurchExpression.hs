@@ -46,22 +46,22 @@ exInferType context expression =
     ExFalse ->
       Right TpBoolean
     
-    ExCaseBoolean input branchTrue branchFalse ->
+    ExCaseBoolean input true false ->
       do
         inputType <- exInferType context input
 
         unless
           (inputType == TpBoolean)
-          (Left "ChurchExpression.ExCaseBoolea: input is not a boolean")
+          (Left "ChurchExpression.ExCaseBoolean: input is not a boolean")
         
-        branchTrueType <- exInferType context branchTrue
-        branchFalseType <- exInferType context branchFalse
+        trueType <- exInferType context true
+        falseType <- exInferType context false
 
         unless
-          (branchTrueType == branchFalseType)
+          (trueType == falseType)
           (Left "ChurchExpression.ExCaseBoolean: type mismatch between branches")
 
-        Right branchTrueType
+        Right trueType
 
     ExZero ->
       Right TpNatural
@@ -76,7 +76,7 @@ exInferType context expression =
 
         Right TpNatural
     
-    ExCaseNatural input branchZero branchSuccessor ->
+    ExCaseNatural input zero successor ->
       do
         inputType <- exInferType context input
 
@@ -84,24 +84,24 @@ exInferType context expression =
           (inputType == TpNatural)
           (Left "ChurchExpression.ExCaseNatural: input is not a natural")
 
-        branchZeroType <- exInferType context branchZero
-        branchSuccessorType <- exInferType context branchSuccessor
+        zeroType <- exInferType context zero
+        successorType <- exInferType context successor
 
         unless
-          (TpAbstraction TpNatural branchZeroType == branchSuccessorType)
+          (TpAbstraction TpNatural zeroType == successorType)
           (Left "ChurchExpression.ExCaseNatural: type mismatch between branches")
 
-        Right branchZeroType
+        Right zeroType
     
     ExVariable variable ->
       cnLookup variable context
     
-    ExAbstraction variableName variableType abstractionBody ->
+    ExAbstraction variable variableType body ->
       do
-        context' <- cnInsert variableName variableType context
-        abstractionBodyType <- exInferType context' abstractionBody
+        context' <- cnInsert variable variableType context
+        bodyType <- exInferType context' body
 
-        Right (TpAbstraction variableType abstractionBodyType)
+        Right (TpAbstraction variableType bodyType)
     
     ExApplication function argument ->
       do

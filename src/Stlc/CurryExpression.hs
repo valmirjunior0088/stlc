@@ -64,8 +64,8 @@ cnFreshTypeVariable :: String -> Context Type -> Type
 cnFreshTypeVariable seed context =
   TpVariable (cnFreshen (Variable seed) context)
 
-exCollectTypeEquations :: Context Type -> Expression -> Either String (Type, [TypeEquation])
-exCollectTypeEquations context expression =
+exCollectEquations :: Context Type -> Expression -> Either String (Type, [TypeEquation])
+exCollectEquations context expression =
   case expression of
     ExTrue ->
       Right (TpBoolean, [])
@@ -73,36 +73,39 @@ exCollectTypeEquations context expression =
     ExFalse ->
       Right (TpBoolean, [])
     
-    ExCaseBoolean input branchTrue branchFalse ->
+    ExCaseBoolean input true false ->
       do
-        (inputType, inputEquations) <- exCollectTypeEquations context input
-        (branchTrueType, branchTrueEquations) <- exCollectTypeEquations context branchTrue
-        (branchFalseType, branchFalseEquations) <- exCollectTypeEquations context branchFalse
+        (inputType, inputEquations) <- exCollectEquations context input
+        (trueType, trueEquations) <- exCollectEquations context true
+        (falseType, falseEquations) <- exCollectEquations context false
 
-        let collectedEquations = inputEquations ++ branchTrueEquations ++ branchFalseEquations
-        let localEquations = [(inputType, TpBoolean), (branchTrueType, branchFalseType)]
+        let collectedEquations = inputEquations ++ trueEquations ++ falseEquations
+        let localEquations = [(inputType, TpBoolean), (trueType, falseType)]
 
-        Right (branchTrueType, collectedEquations ++ localEquations)
+        Right (trueType, collectedEquations ++ localEquations)
     
     ExZero ->
       Right (TpNatural, [])
     
     ExSuccessor input ->
       do
-        (inputType, inputEquations) <- exCollectTypeEquations context input
+        (inputType, inputEquations) <- exCollectEquations context input
 
         Right (TpNatural, inputEquations ++ [(inputType, TpNatural)])
     
-    ExCaseNatural input branchZero branchSuccessor ->
+    ExCaseNatural input zero successor ->
       do
-        (inputType, inputEquations) <- exCollectTypeEquations context input
-        (branchZeroType, branchZeroEquations) <- exCollectTypeEquations context branchZero
-        (branchSuccessorType, branchSuccessorEquations) <- exCollectTypeEquations context branchSuccessor
+        (inputType, inputEquations) <- exCollectEquations context input
+        (zeroType, zeroEquations) <- exCollectEquations context zero
+        (successorType, successorEquations) <- exCollectEquations context successor
 
-        let collectedEquations = inputEquations ++ branchZeroEquations ++ branchSuccessorEquations
-        let localEquations = [(inputType, TpNatural), (TpAbstraction TpNatural branchZeroType, branchSuccessorType)]
+        let collectedEquations = inputEquations ++ zeroEquations ++ successorEquations
 
-        Right (branchZeroType, collectedEquations ++ localEquations)
+        let inputTypeEquation = (inputType, TpNatural)
+        let successorTypeEquation = (TpAbstraction TpNatural zeroType, successorType)
+        let localEquations = [inputTypeEquation, successorTypeEquation]
+
+        Right (zeroType, collectedEquations ++ localEquations)
     
     ExVariable variable ->
       do
@@ -110,19 +113,19 @@ exCollectTypeEquations context expression =
 
         Right (variableType, [])
     
-    ExAbstraction variableName abstractionBody ->
+    ExAbstraction variable body ->
       do
         let variableType = cnFreshTypeVariable "x" context
-        context' <- cnInsert variableName variableType context
-        (abstractionBodyType, abstractionBodyEquations) <- exCollectTypeEquations context' abstractionBody
+        context' <- cnInsert variable variableType context
+        (bodyType, bodyEquations) <- exCollectEquations context' body
 
-        Right (TpAbstraction variableType abstractionBodyType, abstractionBodyEquations)
+        Right (TpAbstraction variableType bodyType, bodyEquations)
     
     ExApplication function argument ->
       do
         let outputType = cnFreshTypeVariable "x" context
-        (functionType, functionEquations) <- exCollectTypeEquations context function
-        (argumentType, argumentEquations) <- exCollectTypeEquations context argument
+        (functionType, functionEquations) <- exCollectEquations context function
+        (argumentType, argumentEquations) <- exCollectEquations context argument
 
         let collectedEquations = functionEquations ++ argumentEquations
         let localEquations = [(functionType, TpAbstraction argumentType outputType)]
@@ -145,41 +148,43 @@ tpApplySubstitution substitution@(key, value) subject =
       TpNatural
 
     TpAbstraction function argument ->
-      TpAbstraction (tpApplySubstitution substitution function) (tpApplySubstitution substitution argument)
+      TpAbstraction
+        (tpApplySubstitution substitution function)
+        (tpApplySubstitution substitution argument)
 
 teApplySubstitution :: Substitution -> TypeEquation -> TypeEquation
 teApplySubstitution substitution (left, right) =
   (tpApplySubstitution substitution left, tpApplySubstitution substitution right)
 
 teUnify :: [Substitution] -> [TypeEquation] -> Either String [Substitution]
-teUnify substitutions typeEquations =
-  case typeEquations of
+teUnify substitutions equations =
+  case equations of
     [] ->
       Right substitutions
     
-    (TpVariable variable, TpVariable variable') : typeEquations' | variable == variable' ->
-      teUnify substitutions typeEquations'
+    (TpVariable variable, TpVariable variable') : equations' | variable == variable' ->
+      teUnify substitutions equations'
     
-    (TpBoolean, TpBoolean) : typeEquations' ->
-      teUnify substitutions typeEquations'
+    (TpBoolean, TpBoolean) : equations' ->
+      teUnify substitutions equations'
     
-    (TpNatural, TpNatural) : typeEquations' ->
-      teUnify substitutions typeEquations'
+    (TpNatural, TpNatural) : equations' ->
+      teUnify substitutions equations'
     
-    (TpAbstraction inputType1 outputType1, TpAbstraction inputType2 outputType2) : typeEquations' ->
-      teUnify substitutions ([(inputType1, inputType2), (outputType1, outputType2)] ++ typeEquations')
+    (TpAbstraction input1 output1, TpAbstraction input2 output2) : equations' ->
+      teUnify substitutions ([(input1, input2), (output1, output2)] ++ equations')
     
-    (TpVariable variable, source) : typeEquations' ->
-      teSolve substitutions variable source typeEquations'
+    (TpVariable variable, source) : equations' ->
+      teSolve substitutions variable source equations'
     
-    (source, TpVariable variable) : typeEquations' ->
-      teSolve substitutions variable source typeEquations'
+    (source, TpVariable variable) : equations' ->
+      teSolve substitutions variable source equations'
 
-    typeEquations' ->
-      Left ("teUnify: Could not unify supplied type equations [" ++ show typeEquations' ++ "]")
+    equations' ->
+      Left ("teUnify: Could not unify supplied type equations [" ++ show equations' ++ "]")
 
 teSolve :: [Substitution] -> Variable -> Type -> [TypeEquation] -> Either String [Substitution]
-teSolve substitutions variable source typeEquations =
+teSolve substitutions variable source equations =
   if tpIsFresh variable source
     then
       let
@@ -187,7 +192,7 @@ teSolve substitutions variable source typeEquations =
       in
         teUnify
           (substitutions ++ [substitution])
-          (map (teApplySubstitution substitution) typeEquations)
+          (map (teApplySubstitution substitution) equations)
     else
       Left ("teSolve: variable " ++ show variable ++ "is not fresh in " ++ show source)
 
@@ -198,7 +203,7 @@ tpApplySubstitutions substitutions subject =
 exInferType :: Context Type -> Expression -> Either String Type
 exInferType context expression =
   do
-    (expressionType, expressionEquations) <- exCollectTypeEquations context expression
+    (expressionType, expressionEquations) <- exCollectEquations context expression
     substitutions <- teUnify [] expressionEquations
 
     Right (tpApplySubstitutions substitutions expressionType)
