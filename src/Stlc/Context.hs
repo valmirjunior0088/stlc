@@ -1,9 +1,9 @@
 module Stlc.Context
-  (Variable
-  ,Context (..)
+  (Context (..)
   ,cnEmpty
   ,cnInsert
   ,cnLookup
+  ,cnAll
   )
   where
 
@@ -11,36 +11,38 @@ import Prelude hiding
   (lookup
   )
 
-import Stlc.Type
-  (Type (..)
+import Data.Map.Strict
+  (Map
+  ,empty
+  ,member
+  ,insert
+  ,lookup
+  ,elems
   )
 
 import Stlc.Variable
   (Variable (..)
   )
 
-import Data.Map
-  (Map
-  ,empty
-  ,insert
-  ,lookup
-  )
+newtype Context a =
+  Context (Map Variable a)
 
-newtype Context =
-  Context (Map Variable Type)
-
-cnEmpty :: Context
+cnEmpty :: Context a
 cnEmpty =
   Context empty
 
-cnInsert :: Variable -> Type -> Context -> Either String Context
+cnInsert :: Variable -> a -> Context a -> Either String (Context a)
 cnInsert key value (Context context) =
-  case lookup key context of
-    Nothing -> Right (Context (insert key value context))
-    Just _ -> Left ("Context: variable '" ++ show key ++ "' already exists")
+  if member key context
+    then Left ("Context: variable '" ++ show key ++ "' already exists")
+    else Right (Context (insert key value context))
 
-cnLookup :: Variable -> Context -> Either String Type
+cnLookup :: Variable -> Context a -> Either String a
 cnLookup key (Context context) =
   case lookup key context of
     Nothing -> Left ("Context: variable '" ++ show key ++ "' does not exist")
     Just value -> Right value
+
+cnAll :: (a -> Bool) -> Context a -> Bool
+cnAll predicate (Context context) =
+  all predicate (elems context)

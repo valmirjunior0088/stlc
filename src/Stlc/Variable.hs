@@ -1,5 +1,6 @@
 module Stlc.Variable
   (Variable (..)
+  ,vrAppend
   )
   where
 
@@ -10,3 +11,7 @@ newtype Variable =
 instance Show Variable where
   show (Variable string) =
     string
+
+vrAppend :: String -> Variable -> Variable
+vrAppend string (Variable variable) =
+  Variable (variable ++ string)

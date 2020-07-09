@@ -4,13 +4,12 @@ module Stlc.ChurchExpression
   )
   where
 
-import Stlc.Type
-  (Type (..)
+import Stlc.Variable
+  (Variable (..)
   )
 
 import Stlc.Context
-  (Variable
-  ,Context (..)
+  (Context (..)
   ,cnInsert
   ,cnLookup
   )
@@ -18,6 +17,12 @@ import Stlc.Context
 import Control.Monad
   (unless
   )
+
+data Type =
+  TpBoolean |
+  TpNatural |
+  TpAbstraction Type Type
+  deriving (Eq, Show)
 
 data Expression =
   ExTrue |
@@ -31,7 +36,7 @@ data Expression =
   ExApplication Expression Expression
   deriving (Show)
 
-exInferType :: Context -> Expression -> Either String Type
+exInferType :: Context Type -> Expression -> Either String Type
 exInferType context expression =
   case expression of
     ExTrue ->
@@ -46,14 +51,14 @@ exInferType context expression =
 
         unless
           (inputType == TpBoolean)
-          (Left "Inference (ExCaseBoolean): input is not a boolean")
+          (Left "ChurchExpression.ExCaseBoolea: input is not a boolean")
         
         branchTrueType <- exInferType context branchTrue
         branchFalseType <- exInferType context branchFalse
 
         unless
           (branchTrueType == branchFalseType)
-          (Left "Inference (ExCaseBoolean): type mismatch between branches")
+          (Left "ChurchExpression.ExCaseBoolean: type mismatch between branches")
 
         Right branchTrueType
 
@@ -66,7 +71,7 @@ exInferType context expression =
 
         unless
           (inputType == TpNatural)
-          (Left "Inference (ExSuccessor): input is not a natural")
+          (Left "ChurchExpression.ExSuccessor: input is not a natural")
 
         Right TpNatural
     
@@ -76,14 +81,14 @@ exInferType context expression =
 
         unless
           (inputType == TpNatural)
-          (Left "Inference (ExCaseNatural): input is not a natural")
+          (Left "ChurchExpression.ExCaseNatural: input is not a natural")
 
         branchZeroType <- exInferType context branchZero
         branchSuccessorType <- exInferType context branchSuccessor
 
         unless
           (TpAbstraction TpNatural branchZeroType == branchSuccessorType)
-          (Left "Inference (ExCaseNatural): type mismatch between branches")
+          (Left "ChurchExpression.ExCaseNatural: type mismatch between branches")
 
         Right branchZeroType
     
@@ -108,9 +113,9 @@ exInferType context expression =
 
               unless
                 (inputType == argumentType)
-                (Left "Inference (ExApplication): type mismatch")
+                (Left "ChurchExpression.ExApplication: type mismatch")
 
               Right outputType
 
           _ ->
-            Left "Inference (ExApplication): left-hand side is not a function"
+            Left "ChurchExpression.ExApplication: left-hand side is not a function"
