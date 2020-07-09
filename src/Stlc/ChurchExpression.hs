@@ -1,5 +1,6 @@
 module Stlc.ChurchExpression
-  (Expression (..)
+  (Type (..)
+  ,Expression (..)
   ,exInferType
   )
   where
