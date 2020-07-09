@@ -64,9 +64,9 @@ cnFreshen variable context =
     then variable
     else cnFreshen (vrAppend "'" variable) context
 
-cnFreshVariable :: String -> Context Type -> Type
+cnFreshVariable :: String -> Context Type -> Variable
 cnFreshVariable seed context =
-  TpVariable (cnFreshen (Variable seed) context)
+  cnFreshen (Variable seed) context
 
 exCollectTypeEquations :: Context Type -> Expression -> Either String (Type, [TypeEquation])
 exCollectTypeEquations context expression =
@@ -116,7 +116,7 @@ exCollectTypeEquations context expression =
     
     ExAbstraction variableName abstractionBody ->
       do
-        let variableType = cnFreshVariable "x" context
+        let variableType = TpVariable (cnFreshVariable "x" context)
         context' <- cnInsert variableName variableType context
         (abstractionBodyType, abstractionBodyEquations) <- exCollectTypeEquations context' abstractionBody
 
@@ -124,7 +124,7 @@ exCollectTypeEquations context expression =
     
     ExApplication function argument ->
       do
-        let outputType = cnFreshVariable "x" context
+        let outputType = TpVariable (cnFreshVariable "x" context)
         (functionType, functionEquations) <- exCollectTypeEquations context function
         (argumentType, argumentEquations) <- exCollectTypeEquations context argument
 
