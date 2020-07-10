@@ -102,8 +102,8 @@ exCollectEquations context expression =
         let collectedEquations = inputEquations ++ zeroEquations ++ successorEquations
 
         let inputTypeEquation = (inputType, TpNatural)
-        let outputTypeEquation = (TpAbstraction TpNatural zeroType, successorType)
-        let localEquations = [inputTypeEquation, outputTypeEquation]
+        let branchesTypeEquation = (TpAbstraction TpNatural zeroType, successorType)
+        let localEquations = [inputTypeEquation, branchesTypeEquation]
 
         Right (zeroType, collectedEquations ++ localEquations)
     

@@ -52,14 +52,14 @@ exInferType context expression =
 
         unless
           (inputType == TpBoolean)
-          (Left "ChurchExpression.ExCaseBoolean: input is not a boolean")
+          (Left "ExCaseBoolean: input is not a boolean")
         
         trueType <- exInferType context true
         falseType <- exInferType context false
 
         unless
           (trueType == falseType)
-          (Left "ChurchExpression.ExCaseBoolean: type mismatch between branches")
+          (Left "ExCaseBoolean: type mismatch between branches")
 
         Right trueType
 
@@ -72,7 +72,7 @@ exInferType context expression =
 
         unless
           (inputType == TpNatural)
-          (Left "ChurchExpression.ExSuccessor: input is not a natural")
+          (Left "ExSuccessor: input is not a natural")
 
         Right TpNatural
     
@@ -82,14 +82,14 @@ exInferType context expression =
 
         unless
           (inputType == TpNatural)
-          (Left "ChurchExpression.ExCaseNatural: input is not a natural")
+          (Left "ExCaseNatural: input is not a natural")
 
         zeroType <- exInferType context zero
         successorType <- exInferType context successor
 
         unless
           (TpAbstraction TpNatural zeroType == successorType)
-          (Left "ChurchExpression.ExCaseNatural: type mismatch between branches")
+          (Left "ExCaseNatural: type mismatch between branches")
 
         Right zeroType
     
@@ -114,9 +114,9 @@ exInferType context expression =
 
               unless
                 (inputType == argumentType)
-                (Left "ChurchExpression.ExApplication: type mismatch")
+                (Left "ExApplication: type mismatch")
 
               Right outputType
 
           _ ->
-            Left "ChurchExpression.ExApplication: left-hand side is not a function"
+            Left "ExApplication: left-hand side is not a function"
