@@ -36,11 +36,8 @@ data Expression =
   ExApplication Expression Expression
   deriving (Show)
 
-type TypeEquation =
-  (Type, Type)
-
-tpIsVariableFresh :: Variable -> Type -> Bool
-tpIsVariableFresh variable subject =
+tpIsTypeVariableFresh :: Variable -> Type -> Bool
+tpIsTypeVariableFresh variable subject =
   case subject of
     TpVariable variable' ->
       if variable == variable' then False else True
@@ -52,17 +49,20 @@ tpIsVariableFresh variable subject =
       True
 
     TpAbstraction inputType outputType ->
-      tpIsVariableFresh variable inputType || tpIsVariableFresh variable outputType
+      tpIsTypeVariableFresh variable inputType || tpIsTypeVariableFresh variable outputType
 
-cnFreshenVariable :: Variable -> Context Type -> Variable
-cnFreshenVariable variable context =
-  if cnAll (tpIsVariableFresh variable) context
+cnFreshenTypeVariable :: Variable -> Context Type -> Variable
+cnFreshenTypeVariable variable context =
+  if cnAll (tpIsTypeVariableFresh variable) context
     then variable
-    else cnFreshenVariable (vrAppend "'" variable) context
+    else cnFreshenTypeVariable (vrAppend "'" variable) context
 
 cnFreshTypeVariable :: String -> Context Type -> Type
 cnFreshTypeVariable seed context =
-  TpVariable (cnFreshenVariable (Variable seed) context)
+  TpVariable (cnFreshenTypeVariable (Variable seed) context)
+
+type TypeEquation =
+  (Type, Type)
 
 exCollectEquations :: Context Type -> Expression -> Either String (Type, [TypeEquation])
 exCollectEquations context expression =
@@ -185,7 +185,7 @@ teUnify substitutions equations =
 
 teSolve :: [Substitution] -> Variable -> Type -> [TypeEquation] -> Either String [Substitution]
 teSolve substitutions variable source equations =
-  if tpIsVariableFresh variable source
+  if tpIsTypeVariableFresh variable source
     then
       let
         substitution = (variable, source)
