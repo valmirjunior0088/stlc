@@ -1,3 +1,3 @@
 # stlc
 
-Simply typed lambda calculus experiments
+Simply typed lambda calculus and Hindley-Milner inference
