@@ -1,3 +1,3 @@
 # stlc
 
-Simply typed lambda calculus and Hindley-Milner inference
+Simply typed lambda calculus and Hindley-Milner inference.
