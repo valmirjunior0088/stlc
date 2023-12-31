@@ -1,3 +1,3 @@
 # stlc
 
-Simply typed lambda calculus and Hindley-Milner inference.
+Experiments on type inference through unification based on the simply typed lambda calculus.
